@@ -24,3 +24,6 @@ elixir_data_mapper-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Env-specific files
+/config/dev.exs
