@@ -12,18 +12,31 @@ defmodule DM do
 
   """
   def sync do
-    #customData = ProductData.load()
-    #ProductData.mapCollections()
+    # Load product data that we want to "merge" into shopify
+    productData = ProductData.load()
+    IO.puts "All Custom Product Data:"
+    IO.inspect productData
 
-    for product <- ShopifyClient.get_products() do 
-      IO.inspect product
-      # do a basic shopify update for simple things we can update via rest api 
-      #ProductData.enrich(customData, product[:id]) |> ShopifyClient.update_product(product[:id])
+    # Return a map of Shopify collections, keyed by name, so I can use collection IDs to add to products
+    collectionMap = ProductData.mapCollections()
+
+    for product <- ShopifyClient.get_products().body["products"] do 
+      #IO.puts "Shopify Product Data:"
+      #IO.inspect product
+      #IO.puts "----"
+
+      # Map custom data to Shopify product, then update the product
+      ProductData.mapProductData(product, productData) #|> ShopifyClient.update_product
+      #ProductData.mapVariantData(product, productData)
+      
+      #ProductData.enrich(product, productData, product[:id]) 
+      #  |> ShopifyClient.update_product(product[:id])
 
       # add to collections 
-      #ProductData.getCollections(customData, product[:id]) |> ShopifyClient.add_to_collections(product[:id])
+      #ProductData.getCollections(productData, product[:id]) |> ShopifyClient.add_to_collections(product[:id], collectionMap)
 
-      # use graphQL api to add proper category
+      # use graphQL api to add proper category; this can't be done with the rest API 
+      # why not use graphQL for everything? Because there's no pre-built client and that's out of scope for this task (for now)
       # ProductData.getTaxClass(product[:id]) |> CategoryMapper.get_shopify_category |> ShopifyGraphQLClient.updateTaxonomy
     end 
 

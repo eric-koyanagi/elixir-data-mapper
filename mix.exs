@@ -25,7 +25,8 @@ defmodule DM.MixProject do
       {:hackney, "~> 1.15"},
       {:jason, "~> 1.1"},
       {:gen_stage, "~> 0.14"},
-      {:neuron, "~> 5.1.0"}
+      {:neuron, "~> 5.1.0"},
+      {:csv, "~> 3.0"}
     ]
   end
 end

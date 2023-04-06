@@ -26,14 +26,21 @@ defmodule ShopifyClient do
   end 
 
   def update_product(product_id, data) do 
+    %{}
+    """
     with {:ok, resp} <- Shopify.Product.update(product_id, data) |> Shopify.request(get_session())
     do
       resp
     else 
       error ->
-        Logger.error("Error updating product to Shopify: #{inspect(error)}")
+        Logger.error("Error updating product to Shopify: {inspect(error)}")
         []
     end
+    """
+  end 
+
+  def update_variant(variant_id, data) do 
+    %{}
   end 
 
   def get_collections do 

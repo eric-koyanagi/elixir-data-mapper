@@ -27,3 +27,6 @@ elixir_data_mapper-*.tar
 
 # Env-specific files
 /config/dev.exs
+
+# Data files (i.e. CSV exports)
+/data/
