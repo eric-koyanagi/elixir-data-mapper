@@ -1,6 +1,6 @@
 defmodule DM do
   @moduledoc """
-  Documentation for `DM`.
+  Entry point for data mapper; high level controller for pushing custom data to Shopify
   """
 
   @doc """
@@ -13,8 +13,10 @@ defmodule DM do
   """
   def sync do
     #customData = ProductData.load()
+    #ProductData.mapCollections()
 
     for product <- ShopifyClient.get_products() do 
+      IO.inspect product
       # do a basic shopify update for simple things we can update via rest api 
       #ProductData.enrich(customData, product[:id]) |> ShopifyClient.update_product(product[:id])
 

@@ -36,6 +36,17 @@ defmodule ShopifyClient do
     end
   end 
 
+  def get_collections do 
+    with {:ok, resp} <- Shopify.CustomCollection.list() |> Shopify.request(get_session())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error getting collections from Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
 
   def get_session do
     config = Application.get_all_env(:elixir_data_mapper)
