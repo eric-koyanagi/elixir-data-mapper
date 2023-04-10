@@ -29,11 +29,9 @@ defmodule ProductData do
   def mapProductData(shopData, customData) do
     sku = getFirstSku(shopData)
     if Map.has_key?(customData, sku) do
-      IO.puts "Found SKU #{sku}! Returning product level changes for product API"
-      ProductMapper.buildMap(shopData, customData[sku])
-    else
-      IO.puts "Cannot find source data for SKU #{sku}"
-    end 
+      IO.puts "Found SKU #{sku}! Starting product update..."
+      ProductMapper.buildProductMap(shopData, customData[sku])
+    end
   end
 
   @doc """
@@ -49,6 +47,21 @@ defmodule ProductData do
     end 
   end 
 
+  def mapCategories(shopData, customData, collectionData) do 
+    sku = getFirstSku(shopData)
+    if Map.has_key?(customData, sku) do
+      CollectionMapper.buildCollectionMap(shopData, customData[sku], collectionData)
+    end 
+  end 
+
+  def addToCollections(nil), do: nil
+  def addToCollections([]), do: nil
+  def addToCollections(collects) do
+    for collect <- collects do 
+      ShopifyClient.add_to_collection(collect.product_id, collect.collection_id)
+    end 
+  end 
+
 
   @doc """
   Given a shopify product map, return the first SKU (either at parent or variant level)  
@@ -57,6 +70,8 @@ defmodule ProductData do
     if Map.has_key?(shopData, "variants") do 
       Enum.at(shopData["variants"], 0)["sku"]
     else 
+      IO.puts "Simple product:"
+      IO.inspect shopData 
       shopData["sku"]
     end
   end 
@@ -71,7 +86,7 @@ defmodule ProductData do
 
   """
   def mapCollections do
-    for collection <- ShopifyClient.get_collections.body["custom_collections"] do 
+    for collection <- ShopifyClient.get_collections.body["custom_collections"], into: %{} do 
       {collection["title"], collection["id"]}
     end
   end

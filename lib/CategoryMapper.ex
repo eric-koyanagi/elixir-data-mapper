@@ -32,7 +32,7 @@ defmodule CategoryMapper do
     "gift-cards-14111803a0001" => 5582,
   }
 
-  def get_shopify_category(category_name) do 
+  def getShopCtegory(category_name) do 
     @categoryMap[category_name]
   end 
 
