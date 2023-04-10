@@ -47,15 +47,15 @@ defmodule DM do
       mappedData = ProductData.mapProductData(product, productData) 
       ShopifyClient.update_product(mappedData)
       
-      # Push InventoryItem updates to set country of origin
+      # For each variant, update the country of origin 
       VariantData.update_country_of_origin(mappedData["inventory_item_data"]["inventory_item_ids"], mappedData["inventory_item_data"]["country_of_origin"])            
 
-      # Add product to multiple collections
+      # Add the product to every collection mapped from the source data
       ProductData.mapCategories(product, productData, collectionMap)
         |> ProductData.addToCollections()
 
-      # Push product category updates (graphQL only)
-      # TODO
+      # Set the shopify category, which is used for taxes
+      ShopifyClientGraphQL.update_category(mappedData["id"], mappedData["category_data"]["category"])
       
       # TODO replace with proper rate limiting features 
       Process.sleep(200)
