@@ -50,6 +50,7 @@ defmodule ProductData do
   def mapCategories(shopData, customData, collectionData) do 
     sku = getFirstSku(shopData)
     if Map.has_key?(customData, sku) do
+      IO.puts "In mapCategories "
       CollectionMapper.buildCollectionMap(shopData, customData[sku], collectionData)
     end 
   end 
@@ -57,6 +58,7 @@ defmodule ProductData do
   def addToCollections(nil), do: nil
   def addToCollections([]), do: nil
   def addToCollections(collects) do
+    IO.inspect collects
     for collect <- collects do 
       ShopifyClient.add_to_collection(collect.product_id, collect.collection_id)
     end 

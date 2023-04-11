@@ -13,6 +13,7 @@ defmodule CollectionMapper do
 
     getCustomCategories(customData) 
       |> findMatchingCollectionIds(shopData["id"], collectionData)
+      |> Enum.reject(&is_nil/1)
 
   end 
 
@@ -20,10 +21,8 @@ defmodule CollectionMapper do
   Returns (as a list the categories) present in custom data, but only those that are non-empty 
   """
   def getCustomCategories(customData) do 
-    keys_to_include = ["cat1", "cat2", "cat3", "cat4", "cat5", "cat6", "cat7", "cat8", "cat9", "cat10"]
-    customData 
-      |> Map.take(keys_to_include) 
-      |> Map.values()
+    HtmlEntities.decode(customData["categories"])
+      |>String.split([","]) 
       |> Enum.reject(&is_nil/1)
       |> Enum.reject(&(&1 == ""))
   end 

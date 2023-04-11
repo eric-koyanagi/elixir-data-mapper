@@ -88,6 +88,7 @@ defmodule ShopifyClient do
     end
   end 
 
+  def add_to_collection(a, nil), do: IO.puts "Product #{a} has no matching collection."
   def add_to_collection(product_id, collection_id) do 
     IO.puts "Adding product #{product_id} to collection #{collection_id}"
     with {:ok, resp} <- Shopify.Collect.add_product(%{ :collect => %{:product_id => product_id, :collection_id => collection_id}}) |> Shopify.request(get_session())

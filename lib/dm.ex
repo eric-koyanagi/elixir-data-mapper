@@ -51,6 +51,7 @@ defmodule DM do
       VariantData.update_country_of_origin(mappedData["inventory_item_data"]["inventory_item_ids"], mappedData["inventory_item_data"]["country_of_origin"])            
 
       # Add the product to every collection mapped from the source data
+      # TODO: either see if I can check for current collections or swallow the error for "already added to collection"
       ProductData.mapCategories(product, productData, collectionMap)
         |> ProductData.addToCollections()
 
