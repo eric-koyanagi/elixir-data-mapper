@@ -1,6 +1,6 @@
 # DM
 
-**TODO: Add description**
+**An Elixir-based application that can enrich product and related resources in Shopify based on an arbitrary source (in this case, a CSV)**
 
 ## Installation
 
