@@ -8,7 +8,11 @@ defmodule ShopifyClientGraphQL do
 
 		# get the shopify category ID from the category populated via custom data
 		get_update_category_query(id, CategoryMapper.getShopCategory(category))
-			|> Shopify.GraphQL.send(access_token: Application.get_env(:elixir_data_mapper, :access_token), shop: Application.get_env(:elixir_data_mapper, :shop_name))
+			|> Shopify.GraphQL.send(
+				access_token: Application.get_env(:elixir_data_mapper, :access_token), 
+				shop: Application.get_env(:elixir_data_mapper, :shop_name),
+				limiter: true
+			)
 
 
 	end 

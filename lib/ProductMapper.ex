@@ -14,7 +14,7 @@ defmodule ProductMapper do
       "id" => productData["id"],
       "product_data" => %{
         "product" => %{
-          "vendor" => customData["brand"],
+          "vendor" => HtmlEntities.decode(customData["brand"]),
           "tags" => customData["tags"],
           "published_at" => customData["publishDate"],          
         }

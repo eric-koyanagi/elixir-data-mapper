@@ -58,9 +58,6 @@ defmodule DM do
       # Set the shopify category, which is used for taxes
       ShopifyClientGraphQL.update_category(mappedData["id"], mappedData["category_data"]["category"])
       
-      # TODO replace with proper rate limiting features 
-      Process.sleep(200)
-
     end 
 
     # Extract the Link touple from the headers
