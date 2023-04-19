@@ -4,7 +4,7 @@ defmodule ShopifyClient do
   @maxPerPage 250
 
   def get_products(pageInfo) do
-    params = %{ limit: @maxPerPage, pageInfo: pageInfo }
+    params = %{ limit: @maxPerPage, page_info: pageInfo }
 
     with {:ok, products} <- Shopify.Product.list(params) |> Shopify.request(get_session(), get_config())
     do
@@ -57,8 +57,18 @@ defmodule ShopifyClient do
   end 
 
 
-  def update_variant(variant_id, data) do 
-    %{}
+  def update_variant(product_id, variant_id, data) do 
+    IO.puts "Updating variant: "
+    IO.inspect data
+
+    with {:ok, resp} <- Shopify.ProductVariant.update(product_id, variant_id, data) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error updating variant to Shopify: #{inspect(error)}")
+        []
+    end
   end 
 
   def update_country_of_origin(nil, nil), do: nil

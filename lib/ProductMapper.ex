@@ -9,19 +9,25 @@ defmodule ProductMapper do
       Reminders about & and &1 in elixir; this defines a virtual function, e.g. "For each variant, call map.get to extract a key" 
   """
   def buildProductMap(productData, customData) do
-    #first_variant = Enum.at(productData["variants"], 0)
+    tags = customData["categories"] <> customData["tags"]
+    publishedAt = get_published_at(tags, customData["publishDate"])
+
     %{
       "id" => productData["id"],
       "product_data" => %{
         "product" => %{
           "vendor" => HtmlEntities.decode(customData["brand"]),
-          "tags" => customData["tags"],
-          "published_at" => customData["publishDate"],          
+          "tags" => HtmlEntities.decode(tags),
+          "published_at" => publishedAt,
         }
       },
       "inventory_item_data" => %{
         "inventory_item_ids" => productData["variants"] |> Enum.map(&Map.get(&1, "inventory_item_id")), 
-        "country_of_origin" => customData["country_of_origin"]
+        "country_of_origin" => customData["country_of_origin"],        
+      },
+      "variant_data" => %{
+        "variant_ids" => productData["variants"] |> Enum.map(&Map.get(&1, "id")), 
+        "weight" => customData["weight"] |> blankOrNullToNil
       },
       "category_data" => %{
         "category" => customData["tax_class"]
@@ -29,12 +35,20 @@ defmodule ProductMapper do
     }
   end 
 
-  def buildInventoryMap(productData, customData) do 
-    %{}
-  end 
+  def blankOrNullToNil(""), do: nil
+  def blankOrNullToNil("NULL"), do: nil 
+  def blankOrNullToNil(a), do: a
 
   def get_mapped_field(field_name) do 
     @productMap[field_name]
+  end 
+  
+  def get_published_at(tags, publishedAt) do 
+    if String.contains?(tags, ["Archived", "do not display"]) do 
+      nil 
+    else 
+      publishedAt
+    end 
   end 
 
 end 

@@ -37,7 +37,7 @@ defmodule ProductData do
   @doc """
   Given a shopify product, iterate each variant; map new data from custom data to
   update each variant 
-  """
+  
   def mapVariantData(shopData, customData) do
     if Map.has_key?(shopData, "variants") do 
       for variant <- shopData["variants"] do
@@ -45,7 +45,8 @@ defmodule ProductData do
         #IO.inspect variant 
       end 
     end 
-  end 
+  end
+  """
 
   def mapCategories(shopData, customData, collectionData) do 
     sku = getFirstSku(shopData)
@@ -66,7 +67,7 @@ defmodule ProductData do
 
 
   @doc """
-  Given a shopify product map, return the first SKU (either at parent or variant level)  
+  Given a shopify product map, return the first SKU (either at parent or variant level); note that shop products with no variants still return a variant 
   """
   def getFirstSku(shopData) do 
     if Map.has_key?(shopData, "variants") do 

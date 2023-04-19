@@ -30,6 +30,18 @@ defmodule DM do
   end
 
   @doc """
+  Iterates all blogs from a data source and pushes them into Shopify 
+
+  ## Examples
+
+      iex> DM.sync_blogs()
+  """
+  def sync_blogs do 
+    #blogData = BlogData.load()
+    
+  end 
+
+  @doc """
   Iterates all products in Shopify using data mapped from another source
 
   ## Examples
@@ -39,7 +51,8 @@ defmodule DM do
   def sync_page(pageInfo, productData, collectionMap) do
 
     product_response =  ShopifyClient.get_products(pageInfo)
-    #IO.inspect product_response
+    IO.puts "Getting Next Page; page info: "
+    IO.inspect pageInfo
 
     for product <- product_response.body["products"] do 
       
@@ -47,28 +60,38 @@ defmodule DM do
       mappedData = ProductData.mapProductData(product, productData) 
       ShopifyClient.update_product(mappedData)
       
-      # For each variant, update the country of origin 
-      VariantData.update_country_of_origin(mappedData["inventory_item_data"]["inventory_item_ids"], mappedData["inventory_item_data"]["country_of_origin"])            
+      # For each variant, update the country of origin (via InventoryItem resource)
+      VariantData.update_country_of_origin(mappedData["inventory_item_data"]["inventory_item_ids"], mappedData["inventory_item_data"]["country_of_origin"])
+
+      # Update variant resource data
+      VariantData.update_variants(mappedData["id"], mappedData["variant_data"])
 
       # Add the product to every collection mapped from the source data
-      # TODO: either see if I can check for current collections or swallow the error for "already added to collection"
-      ProductData.mapCategories(product, productData, collectionMap)
-        |> ProductData.addToCollections()
+      # Note: this isn't used due to biz logic, but does work as an example of how to do this
+      #ProductData.mapCategories(product, productData, collectionMap)
+      #  |> ProductData.addToCollections()
 
       # Set the shopify category, which is used for taxes
       ShopifyClientGraphQL.update_category(mappedData["id"], mappedData["category_data"]["category"])
-      
+
     end 
 
     # Extract the Link touple from the headers
     try do 
+      IO.inspect product_response.headers
+ 
       {"Link", linkHeader} = product_response.headers 
-        |> Enum.find(fn {key, _value} -> key == "Link" end)
+        |> Enum.find(fn {key, value} -> key == "Link" end)
 
-      if linkHeader do 
-        get_page_info(linkHeader) |> 
+      # Extract only the last value in a list of links, which will point to the rel=next page
+      linkValue = linkHeader 
+        |> String.split(",")
+        |> List.last
+
+      if linkValue != nil and String.contains?(linkValue, "next") do 
+        get_page_info(linkValue) |> 
           sync_page(productData, collectionMap)
-      end  
+      end
     rescue 
       MatchError -> {:ok, "Done"}
     end 
