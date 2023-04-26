@@ -26,7 +26,7 @@ defmodule ProductData do
   Given a shopify product, map product data from the custom data store
   Use only the first variant's SKU to only run once per product container
   """
-  def mapProductData(shopData, customData) do
+  def map_product_data(shopData, customData) do
     sku = getFirstSku(shopData)
     if Map.has_key?(customData, sku) do
       IO.puts "Found SKU #{sku}! Starting product update..."
@@ -37,18 +37,18 @@ defmodule ProductData do
   @doc """
   Given a shopify product, iterate each variant; map new data from custom data to
   update each variant 
-  
-  def mapVariantData(shopData, customData) do
+  """
+  def map_variant_data(shopData, customData) do
     if Map.has_key?(shopData, "variants") do 
-      for variant <- shopData["variants"] do
-        nil
-        #IO.inspect variant 
-      end 
+      # Map variant-level data, using variant ID as a key
+      Map.new(shopData["variants"], fn row ->        
+        {row["id"], ProductMapper.buildVariantMap(row, customData[row["sku"]])}
+      end)
     end 
   end
-  """
 
-  def mapCategories(shopData, customData, collectionData) do 
+
+  def map_categories(shopData, customData, collectionData) do 
     sku = getFirstSku(shopData)
     if Map.has_key?(customData, sku) do
       IO.puts "In mapCategories "

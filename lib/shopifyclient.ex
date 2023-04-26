@@ -57,11 +57,15 @@ defmodule ShopifyClient do
   end 
 
 
+  def update_variant(product_id, variant_id, data) when data == %{} do
+    IO.puts "No variant data to update for variant ID# #{variant_id}"
+  end 
+
   def update_variant(product_id, variant_id, data) do 
     IO.puts "Updating variant: "
     IO.inspect data
 
-    with {:ok, resp} <- Shopify.ProductVariant.update(product_id, variant_id, data) |> Shopify.request(get_session(), get_config())
+    with {:ok, resp} <- Shopify.ProductVariant.update(product_id, variant_id, %{ "variant" => data }) |> Shopify.request(get_session(), get_config())
     do
       resp
     else 

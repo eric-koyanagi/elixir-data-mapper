@@ -38,7 +38,7 @@ defmodule DM do
   """
   def sync_blogs do 
     #blogData = BlogData.load()
-    
+
   end 
 
   @doc """
@@ -57,25 +57,53 @@ defmodule DM do
     for product <- product_response.body["products"] do 
       
       # Map custom data to Shopify product, then push Product level updates
-      mappedData = ProductData.mapProductData(product, productData) 
-      ShopifyClient.update_product(mappedData)
+      mappedProductData = ProductData.map_product_data(product, productData) 
+      mappedVariantData = ProductData.map_variant_data(product, productData)
+
+      sync_product_data(mappedProductData)
+      sync_variant_data(mappedProductData, mappedVariantData)
       
-      # For each variant, update the country of origin (via InventoryItem resource)
-      VariantData.update_country_of_origin(mappedData["inventory_item_data"]["inventory_item_ids"], mappedData["inventory_item_data"]["country_of_origin"])
-
-      # Update variant resource data
-      VariantData.update_variants(mappedData["id"], mappedData["variant_data"])
-
-      # Add the product to every collection mapped from the source data
-      # Note: this isn't used due to biz logic, but does work as an example of how to do this
-      #ProductData.mapCategories(product, productData, collectionMap)
-      #  |> ProductData.addToCollections()
-
-      # Set the shopify category, which is used for taxes
-      ShopifyClientGraphQL.update_category(mappedData["id"], mappedData["category_data"]["category"])
-
     end 
 
+    # Iterate each next page until there's no pages left
+    sync_next_page(product_response, productData, collectionMap)    
+  end 
+
+  @doc """
+  Given a mapping of data, push product-level updates to Shopify; called by sync_all
+  """
+  def sync_product_data(nil), do: nil 
+  def sync_product_data(mappedProductData) do 
+      # Basic product level updates
+      ShopifyClient.update_product(mappedProductData)
+      
+      # For each variant, update the country of origin (via InventoryItem resource)
+      VariantData.update_country_of_origin(mappedProductData["inventory_item_data"]["inventory_item_ids"], mappedProductData["inventory_item_data"]["country_of_origin"])
+
+      # Set the shopify category, which is used for taxes (cannot be done via REST)
+      ShopifyClientGraphQL.update_category(mappedProductData["id"], mappedProductData["category_data"]["category"])
+
+      # Add the product to every collection mapped from the source data
+      # Note: this isn't used due to biz logic changes, but does work as an example of how to do this!
+      #ProductData.map_categories(product, mappedProductData, collectionMap)
+      #  |> ProductData.addToCollections()
+  end 
+
+  @doc """
+  Given a mapping of data, push variant-level updates to Shopify; called by sync_all
+  """
+  def sync_variant_data(nil, a), do: nil
+  def sync_variant_data(b, nil), do: nil
+  def sync_variant_data(nil, nil), do: nil
+  def sync_variant_data(mappedProductData, mappedVariantData) do
+    # Update variant resource data
+      VariantData.update_variants(mappedProductData, mappedVariantData)
+  end
+
+  @doc """
+  Calls sync_page on the next page of data, if one exists
+  """
+  def sync_next_page(product_response, productData, collectionMap) do 
     # Extract the Link touple from the headers
     try do 
       IO.inspect product_response.headers
@@ -95,8 +123,6 @@ defmodule DM do
     rescue 
       MatchError -> {:ok, "Done"}
     end 
-
-    
   end 
 
   @doc """

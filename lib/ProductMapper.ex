@@ -21,6 +21,7 @@ defmodule ProductMapper do
           "published_at" => publishedAt,
         }
       },
+      "images" => productData["images"],
       "inventory_item_data" => %{
         "inventory_item_ids" => productData["variants"] |> Enum.map(&Map.get(&1, "inventory_item_id")), 
         "country_of_origin" => customData["country_of_origin"],        
@@ -35,6 +36,17 @@ defmodule ProductMapper do
     }
   end 
 
+  @doc """
+      builds a map of data when each variant has distinct data; unlike "weight" above, where every variant in Shop is set based on product-level data
+      
+  """
+  def buildVariantMap(variantData, customData) do 
+    %{ 
+      "shop_data" => variantData,
+      "custom_data" => customData
+    }
+  end 
+
   def blankOrNullToNil(""), do: nil
   def blankOrNullToNil("NULL"), do: nil 
   def blankOrNullToNil(a), do: a
@@ -42,7 +54,7 @@ defmodule ProductMapper do
   def get_mapped_field(field_name) do 
     @productMap[field_name]
   end 
-  
+
   def get_published_at(tags, publishedAt) do 
     if String.contains?(tags, ["Archived", "do not display"]) do 
       nil 
