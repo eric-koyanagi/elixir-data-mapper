@@ -115,6 +115,17 @@ defmodule ShopifyClient do
     end
   end 
 
+  def create_article(blog_id, params) do 
+    with {:ok, resp} <- Shopify.Article.create(blog_id, %{ :article => params }) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error creating articles on Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
 
   def get_session do
     config = Application.get_all_env(:elixir_data_mapper)

@@ -6,7 +6,7 @@ defmodule DM do
   """
 
   @doc """
-  Iterates all products in Shopify using data mapped from another source
+  Sycns all products in Shopify using data mapped from another source
 
   ## Examples
 
@@ -16,16 +16,15 @@ defmodule DM do
   def sync_all do
     # Load product data that we want to "merge" into shopify
     productData = ProductData.load()
-    #IO.puts "All Custom Product Data:"
-    #IO.inspect productData
 
     # Return a map of Shopify collections, keyed by name, so I can use collection IDs to add to products
-    collectionMap = ProductData.mapCollections()
-    IO.puts "Shopify Collection Map: "
-    IO.inspect collectionMap    
+    collectionMap = ProductData.mapCollections()  
+
+    # Return a map of dropship data
+    dropshipData = DropshipData.load()
 
     # Start syncing all products, using pagination to fetch results
-    sync_page(nil, productData, collectionMap)
+    sync_page(nil, productData, collectionMap, dropshipData)
 
   end
 
@@ -34,11 +33,10 @@ defmodule DM do
 
   ## Examples
 
-      iex> DM.sync_blogs()
+      iex> DM.sync_blogs(blog_id)
   """
-  def sync_blogs do 
-    #blogData = BlogData.load()
-
+  def sync_blogs(blog_id) do 
+    BlogData.load |> BlogData.create_all(blog_id)
   end 
 
   @doc """
@@ -48,16 +46,15 @@ defmodule DM do
 
       iex> DM.sync_all()
   """
-  def sync_page(pageInfo, productData, collectionMap) do
+  def sync_page(pageInfo, productData, collectionMap, dropshipData) do
 
-    product_response =  ShopifyClient.get_products(pageInfo)
-    IO.puts "Getting Next Page; page info: "
-    IO.inspect pageInfo
+    # Get the next page of products
+    product_response =  ShopifyClient.get_products(pageInfo)    
 
     for product <- product_response.body["products"] do 
       
       # Map custom data to Shopify product, then push Product level updates
-      mappedProductData = ProductData.map_product_data(product, productData) 
+      mappedProductData = ProductData.map_product_data(product, productData, dropshipData) 
       mappedVariantData = ProductData.map_variant_data(product, productData)
 
       sync_product_data(mappedProductData)
@@ -66,7 +63,7 @@ defmodule DM do
     end 
 
     # Iterate each next page until there's no pages left
-    sync_next_page(product_response, productData, collectionMap)    
+    sync_next_page(product_response, productData, collectionMap, dropshipData)    
   end 
 
   @doc """
@@ -103,11 +100,9 @@ defmodule DM do
   @doc """
   Calls sync_page on the next page of data, if one exists
   """
-  def sync_next_page(product_response, productData, collectionMap) do 
+  def sync_next_page(product_response, productData, collectionMap, dropshipData) do 
     # Extract the Link touple from the headers
     try do 
-      IO.inspect product_response.headers
- 
       {"Link", linkHeader} = product_response.headers 
         |> Enum.find(fn {key, value} -> key == "Link" end)
 
@@ -118,7 +113,7 @@ defmodule DM do
 
       if linkValue != nil and String.contains?(linkValue, "next") do 
         get_page_info(linkValue) |> 
-          sync_page(productData, collectionMap)
+          sync_page(productData, collectionMap, dropshipData)
       end
     rescue 
       MatchError -> {:ok, "Done"}

@@ -23,15 +23,11 @@ defmodule VariantData do
 		pid = mappedProductData["id"]
 
 		IO.puts "Updating variants for pid #{pid}: "
-		IO.inspect variantDataContainer
-		IO.inspect mappedProductData
+		#IO.inspect variantDataContainer
+		#IO.inspect mappedProductData
 
 		for id when id != nil <- mappedProductData["variant_data"]["variant_ids"] do 
 			variantData = variantDataContainer[id]
-
-			#IO.inspect variantData
-			#IO.inspect get_thumbnail_map(mappedProductData["images"], variantData["custom_data"]["variation_image_url"])
-			#IO.inspect get_weight_map(id, mappedProductData["weight"])
 
 			ShopifyClient.update_variant(pid, id,  
 				get_variant_resource(

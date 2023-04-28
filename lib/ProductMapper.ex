@@ -8,9 +8,21 @@ defmodule ProductMapper do
       Builds a map of data with usable shopify or custom data - used to update product, inventory item, or category
       Reminders about & and &1 in elixir; this defines a virtual function, e.g. "For each variant, call map.get to extract a key" 
   """
-  def buildProductMap(productData, customData) do
-    tags = customData["categories"] <> customData["tags"]
-    publishedAt = get_published_at(tags, customData["publishDate"])
+  def buildProductMap(productData, customData, dropshipDataContainer) do
+
+    # Build a list of valid tags
+    finalSale = if customData["final_sale"] == "yes", do: "Final Sale", else: nil
+    tags = Enum.join([
+      customData["categories"],
+      customData["tags"],
+      finalSale
+    ], ",")
+
+    # Set the published date / flag, but only if tags allow for it
+    publishedAt = get_published_at(tags, customData["publishDate"])    
+
+    # get single row of dropship datat from the container
+    dropship_data = get_dropship_data(dropshipDataContainer, customData["dropshipper"])
 
     %{
       "id" => productData["id"],
@@ -19,6 +31,32 @@ defmodule ProductMapper do
           "vendor" => HtmlEntities.decode(customData["brand"]),
           "tags" => HtmlEntities.decode(tags),
           "published_at" => publishedAt,
+          "metafields" => [
+            %{ 
+              :key => "dropshipper", 
+              :type => "single_line_text_field", 
+              :value => customData["dropshipper"],
+              :namespace => "global" 
+            },
+            %{ 
+              :key => "processing_time", 
+              :type => "number_integer", 
+              :value => get_processing_time(dropship_data),
+              :namespace => "global"
+            },
+            %{ 
+              :key => "gender_filter", 
+              :type => "single_line_text_field", 
+              :value => customData["gender"],
+              :namespace => "global"
+            },
+            %{ 
+              :key => "age_filter", 
+              :type => "single_line_text_field", 
+              :value => customData["age"],
+              :namespace => "global"
+            }
+          ]
         }
       },
       "images" => productData["images"],
@@ -61,6 +99,17 @@ defmodule ProductMapper do
     else 
       publishedAt
     end 
+  end 
+
+  def get_processing_time(nil), do: nil
+  def get_processing_time(dropshipData) do 
+    dropshipData["estimated_processing_time"]
+  end 
+
+  def get_dropship_data(dropshipData, ""), do: nil
+  def get_dropship_data(dropshipData, nil), do: nil
+  def get_dropship_data(dropshipData, dropshipper) do 
+    dropshipData[dropshipper]
   end 
 
 end 

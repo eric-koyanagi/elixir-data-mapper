@@ -26,11 +26,11 @@ defmodule ProductData do
   Given a shopify product, map product data from the custom data store
   Use only the first variant's SKU to only run once per product container
   """
-  def map_product_data(shopData, customData) do
+  def map_product_data(shopData, customData, dropshipData) do
     sku = getFirstSku(shopData)
     if Map.has_key?(customData, sku) do
       IO.puts "Found SKU #{sku}! Starting product update..."
-      ProductMapper.buildProductMap(shopData, customData[sku])
+      ProductMapper.buildProductMap(shopData, customData[sku], dropshipData)
     end
   end
 

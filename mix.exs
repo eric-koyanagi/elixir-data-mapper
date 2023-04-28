@@ -28,7 +28,7 @@ defmodule DM.MixProject do
       {:neuron, "~> 5.1.0"},
       {:csv, "~> 3.0"},
       {:shopify_graphql, "~> 2.1.0"},
-      {:html_entities, "~> 0.5.2"}
+      {:html_entities, "~> 0.5.2"},
     ]
   end
 end
