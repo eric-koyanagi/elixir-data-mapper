@@ -75,11 +75,11 @@ defmodule VariantData do
 		#IO.inspect image_url
 
 		target_url = Path.basename(image_url)
-		IO.puts " basepath of target url is #{target_url}"
+		# IO.puts " basepath of target url is #{target_url}"
 
 		for image <- images do 
 			imSrc = Path.basename(image["src"])
-			IO.puts " --> src of image is #{imSrc}"
+			#IO.puts " --> src of image is #{imSrc}"
 		end 
 
 		# the goal is to find the ID of the image src that matches with the image_url

@@ -44,7 +44,7 @@ defmodule ShopifyClient do
   def update_product(nil), do: nil
   def update_product(data) do 
     IO.puts "Updating product: "
-    IO.inspect data["data"]
+    IO.inspect data["product_data"]
 
     with {:ok, resp} <- Shopify.Product.update(data["id"], data["product_data"]) |> Shopify.request(get_session(), get_config())
     do

@@ -21,13 +21,14 @@ defmodule ProductMapper do
     # Set the published date / flag, but only if tags allow for it
     publishedAt = get_published_at(tags, customData["publishDate"])    
 
-    # get single row of dropship datat from the container
+    # get single row of dropship data from the container
     dropship_data = get_dropship_data(dropshipDataContainer, customData["dropshipper"])
 
     %{
       "id" => productData["id"],
       "product_data" => %{
         "product" => %{
+          "title" => productData["title"] |> String.replace("&Amp;", "&"),
           "vendor" => HtmlEntities.decode(customData["brand"]),
           "tags" => HtmlEntities.decode(tags),
           "published_at" => publishedAt,
@@ -35,7 +36,7 @@ defmodule ProductMapper do
             %{ 
               :key => "dropshipper", 
               :type => "single_line_text_field", 
-              :value => customData["dropshipper"],
+              :value => get_dropshipper(customData["dropshipper"]),
               :namespace => "global" 
             },
             %{ 
@@ -47,16 +48,16 @@ defmodule ProductMapper do
             %{ 
               :key => "gender_filter", 
               :type => "single_line_text_field", 
-              :value => customData["gender"],
+              :value => customData["gender"] |> blankOrNullToNil,
               :namespace => "global"
             },
             %{ 
               :key => "age_filter", 
               :type => "single_line_text_field", 
-              :value => customData["age"],
+              :value => customData["age"] |> blankOrNullToNil,
               :namespace => "global"
             }
-          ]
+          ] ++ get_criteria_list(customData["criteria"])
         }
       },
       "images" => productData["images"],
@@ -106,8 +107,30 @@ defmodule ProductMapper do
     dropshipData["estimated_processing_time"]
   end 
 
-  def get_dropship_data(dropshipData, ""), do: nil
-  def get_dropship_data(dropshipData, nil), do: nil
+  def get_dropshipper(nil), do: nil 
+  def get_dropshipper("0"), do: nil 
+  def get_dropshipper(dropshipper) do 
+    dropshipper
+  end 
+
+  @doc """
+    For each criteira, set it as a boolean flag, but convert the criteria name to a slugified version (shop doesn't support special characters)
+  """
+  def get_criteria_list(nil), do: []
+  def get_criteria_list(""), do: [] 
+  def get_criteria_list(criteriaData) do 
+    for criteria <- String.split(criteriaData, [","]) do 
+      %{
+        :key => criteria |> String.replace(~r/\s+/, "_") |> String.replace(~r/[^A-Za-z0-9_]/, ""), 
+        :type => "boolean",
+        :value => true,
+        :namespace => "global"
+      }
+    end 
+  end 
+
+  def get_dropship_data(_dropshipData, ""), do: nil
+  def get_dropship_data(_dropshipData, nil), do: nil
   def get_dropship_data(dropshipData, dropshipper) do 
     dropshipData[dropshipper]
   end 
