@@ -18,13 +18,17 @@ defmodule DM do
     productData = ProductData.load()
 
     # Return a map of Shopify collections, keyed by name, so I can use collection IDs to add to products
+    # This is not used due to biz logic, but remains as an example because it is a common use case
     collectionMap = ProductData.mapCollections()  
 
     # Return a map of dropship data
     dropshipData = DropshipData.load()
 
+    # Return a map of cin7 style code data; very specific to my use case
+    cin7Data = ProductData.load_styles()
+
     # Start syncing all products, using pagination to fetch results
-    sync_page(nil, productData, collectionMap, dropshipData)
+    sync_page(nil, productData, collectionMap, dropshipData, cin7Data)
 
   end
 
@@ -40,21 +44,45 @@ defmodule DM do
   end 
 
   @doc """
+  Deletes all metafields for a given product and namespace. Note that there's no way to replicate the UI's "delete metafield definition" feature via rest API, so this isn't useful
+  for my use case, but is left here as an example 
+
+  ## Examples
+      iex> DM.delete_metafields(product_id, "woocommerce")
+  """
+  def delete_metafields(product_id, namespace \\ "global") do 
+    ShopifyClient.get_and_delete_metafields(product_id, namespace)
+  end 
+
+  @doc """
+  Create criteria metafields, these have to be created in advance beacuse shopify's bool field is dumb at present; must be programatic to be practical
+
+  ## Examples
+      iex> DM.create_criteria_metafields()
+  """
+  def create_criteria_metafields do 
+    CriteriaData.load |> CriteriaData.create_all
+  end 
+
+  @doc """
   Iterates all products in Shopify using data mapped from another source
 
   ## Examples
 
       iex> DM.sync_all()
   """
-  def sync_page(pageInfo, productData, collectionMap, dropshipData) do
+  def sync_page(pageInfo, productData, collectionMap, dropshipData, cin7Data) do
 
-    # Get the next page of products
-    product_response =  ShopifyClient.get_products(pageInfo)    
+    # Get the next (or first) page of products
+    product_response =  ShopifyClient.get_products(pageInfo) 
+
+    # To test a specific product(s), get products by comma separated IDs     
+    #product_response = ShopifyClient.get_test_products("8218294452517")
 
     for product <- product_response.body["products"] do 
       
       # Map custom data to Shopify product, then push Product level updates
-      mappedProductData = ProductData.map_product_data(product, productData, dropshipData) 
+      mappedProductData = ProductData.map_product_data(product, productData, dropshipData, cin7Data) 
       mappedVariantData = ProductData.map_variant_data(product, productData)
 
       sync_product_data(mappedProductData)
@@ -63,7 +91,7 @@ defmodule DM do
     end 
 
     # Iterate each next page until there's no pages left
-    sync_next_page(product_response, productData, collectionMap, dropshipData)    
+    sync_next_page(product_response, productData, collectionMap, dropshipData, cin7Data)    
   end 
 
   @doc """
@@ -100,7 +128,7 @@ defmodule DM do
   @doc """
   Calls sync_page on the next page of data, if one exists
   """
-  def sync_next_page(product_response, productData, collectionMap, dropshipData) do 
+  def sync_next_page(product_response, productData, collectionMap, dropshipData, cin7Data) do 
     # Extract the Link touple from the headers
     try do 
       {"Link", linkHeader} = product_response.headers 
@@ -113,7 +141,7 @@ defmodule DM do
 
       if linkValue != nil and String.contains?(linkValue, "next") do 
         get_page_info(linkValue) |> 
-          sync_page(productData, collectionMap, dropshipData)
+          sync_page(productData, collectionMap, dropshipData, cin7Data)
       end
     rescue 
       MatchError -> {:ok, "Done"}

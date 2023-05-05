@@ -22,15 +22,23 @@ defmodule ProductData do
     end)
   end
 
+  def load_styles do
+    rows = CSV.decode!(File.stream!("data/cin7_data.csv"), headers: true) 
+    Map.new(rows, fn row ->
+      # Map imported data by key "sku"
+      {row["Code"], row}
+    end)
+  end
+
   @doc """
   Given a shopify product, map product data from the custom data store
   Use only the first variant's SKU to only run once per product container
   """
-  def map_product_data(shopData, customData, dropshipData) do
+  def map_product_data(shopData, customData, dropshipData, cin7Data) do
     sku = getFirstSku(shopData)
     if Map.has_key?(customData, sku) do
       IO.puts "Found SKU #{sku}! Starting product update..."
-      ProductMapper.buildProductMap(shopData, customData[sku], dropshipData)
+      ProductMapper.buildProductMap(shopData, customData[sku], dropshipData, cin7Data)
     end
   end
 

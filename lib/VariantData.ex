@@ -22,7 +22,7 @@ defmodule VariantData do
 	def update_variants(mappedProductData, variantDataContainer) do 
 		pid = mappedProductData["id"]
 
-		IO.puts "Updating variants for pid #{pid}: "
+		#IO.puts "Updating variants for pid #{pid}: "
 		#IO.inspect variantDataContainer
 		#IO.inspect mappedProductData
 
@@ -32,38 +32,29 @@ defmodule VariantData do
 			ShopifyClient.update_variant(pid, id,  
 				get_variant_resource(
 					get_weight_map(id, mappedProductData["weight"]),
-					get_thumbnail_map(mappedProductData["images"], variantData["custom_data"]["variation_image_url"])
+					get_thumbnail_map(mappedProductData["images"], variantData["custom_data"]["variation_image_url"]),
+					get_barcode_map(mappedProductData["variant_data"]["barcode"])
 				)
 			)
 		end
 	end 
 
-	def get_variant_resource(nil, nil), do: nil
-	def get_variant_resource(weight_map, nil), do: weight_map
-	def get_variant_resource(nil, thumbnail_map), do: thumbnail_map
-	def get_variant_resource(weight_map, thumbnail_map) do 
+	@doc """
+	  This methodology of merging maps to build the variant resource could be improved
+  	"""
+	def get_variant_resource(weight_map, thumbnail_map, barcode_map) do 
 		Map.merge(
 			weight_map,
-			thumbnail_map
-		)
+			thumbnail_map			
+		) |> Map.merge(barcode_map)
 	end 
 
-	def get_weight_map(_id, nil), do: nil
+	def get_weight_map(_id, nil), do: %{}
 	def get_weight_map(id, weight) do 
 		%{
 			"weight" => weight,
 			"weight_unit" => "lb"	
 		}
-
-		"""
-		ShopifyClient.update_variant(pid, id, %{
-				"variant" => %{
-				"id" => id,
-				"weight" => weight,
-				"weight_unit" => "lb"
-				}
-			})
-		"""
 	end 
 
 	def get_thumbnail_map(nil, nil), do: %{}
@@ -71,15 +62,11 @@ defmodule VariantData do
 	def get_thumbnail_map(images, "NULL"), do: %{} 		
 	def get_thumbnail_map(images, image_url) do
 		IO.puts "Getting image thumbnail map, target URL: #{image_url}"
-		#IO.inspect images
-		#IO.inspect image_url
 
 		target_url = Path.basename(image_url)
-		# IO.puts " basepath of target url is #{target_url}"
 
 		for image <- images do 
 			imSrc = Path.basename(image["src"])
-			#IO.puts " --> src of image is #{imSrc}"
 		end 
 
 		# the goal is to find the ID of the image src that matches with the image_url
@@ -92,5 +79,9 @@ defmodule VariantData do
 			"image_id" => image_id
 		}
 	end 
+
+	def get_barcode_map(nil), do: %{}
+	def get_barcode_map(""), do: %{}
+	def get_barcode_map(barcode), do: %{ "barcode" => barcode }
 
 end 

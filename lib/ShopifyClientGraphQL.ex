@@ -34,4 +34,36 @@ defmodule ShopifyClientGraphQL do
 		"""
 	end 
 
+
+	def create_criteria_metafield(key, name, namespace \\ "woocommerce") do 
+		create_prodcut_metafield_definition(key, name, namespace) 
+			|> Shopify.GraphQL.send(
+				access_token: Application.get_env(:elixir_data_mapper, :access_token), 
+				shop: Application.get_env(:elixir_data_mapper, :shop_name),
+				limiter: true
+			)
+	end 
+
+	def create_prodcut_metafield_definition(key, name, namespace) do 
+		"""
+		mutation {
+		  metafieldDefinitionCreate(definition: {
+		    namespace: "#{namespace}"
+		    key: "#{key}"
+		    type: "boolean"
+		    name: "#{name}"
+		    ownerType: PRODUCT
+		    description: "Tot Test Criteria Field"
+		    visibleToStorefrontApi: true
+		    pin: true
+		  }) {
+		    userErrors {
+		      field
+		      message
+		    }
+		  }
+		}
+		"""
+	end 
+
 end 

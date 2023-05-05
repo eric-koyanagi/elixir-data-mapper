@@ -8,7 +8,7 @@ defmodule ProductMapper do
       Builds a map of data with usable shopify or custom data - used to update product, inventory item, or category
       Reminders about & and &1 in elixir; this defines a virtual function, e.g. "For each variant, call map.get to extract a key" 
   """
-  def buildProductMap(productData, customData, dropshipDataContainer) do
+  def buildProductMap(productData, customData, dropshipDataContainer, cin7Data) do
 
     # Build a list of valid tags
     finalSale = if customData["final_sale"] == "yes", do: "Final Sale", else: nil
@@ -23,6 +23,9 @@ defmodule ProductMapper do
 
     # get single row of dropship data from the container
     dropship_data = get_dropship_data(dropshipDataContainer, customData["dropshipper"])
+
+    # get a barcpde code from Cin7 data
+    barcode = get_barcode(cin7Data, customData["style"])
 
     %{
       "id" => productData["id"],
@@ -67,7 +70,8 @@ defmodule ProductMapper do
       },
       "variant_data" => %{
         "variant_ids" => productData["variants"] |> Enum.map(&Map.get(&1, "id")), 
-        "weight" => customData["weight"] |> blankOrNullToNil
+        "weight" => customData["weight"] |> blankOrNullToNil,
+        "barcode" => barcode
       },
       "category_data" => %{
         "category" => customData["tax_class"]
@@ -121,12 +125,34 @@ defmodule ProductMapper do
   def get_criteria_list(criteriaData) do 
     for criteria <- String.split(criteriaData, [","]) do 
       %{
-        :key => criteria |> String.replace(~r/\s+/, "_") |> String.replace(~r/[^A-Za-z0-9_]/, ""), 
+        :key => criteria |> sanitize_criteria, 
         :type => "boolean",
         :value => true,
-        :namespace => "global"
+        :namespace => "woocommerce"
       }
     end 
+  end 
+
+  @doc """
+    Given a style code as a "map", find the matching cin7 barcode
+  """
+  def get_barcode(nil), do: nil 
+  def get_barcode(""), do: nil 
+  def get_barcode(cin7Data, style) do 
+    if Map.has_key?(cin7Data, style) do
+      cin7Data[style]["Barcode"]
+    end 
+  end 
+
+
+  @doc """
+    Given a critiera's name, strip spaces and replace with underscores and remove special characters (shopify doesn't allow for key names...
+    well....they do accept the data, but won't allow definitions based on it
+  """
+  def sanitize_criteria(name) do 
+    name 
+      |> String.replace(~r/\s+/, "_") 
+      |> String.replace(~r/[^A-Za-z0-9_]/, "")
   end 
 
   def get_dropship_data(_dropshipData, ""), do: nil

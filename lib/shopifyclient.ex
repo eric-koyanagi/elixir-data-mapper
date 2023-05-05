@@ -16,6 +16,19 @@ defmodule ShopifyClient do
     end
   end
 
+  def get_test_products(ids) do
+    params = %{ limit: @maxPerPage, ids: ids }
+
+    with {:ok, products} <- Shopify.Product.list(params) |> Shopify.request(get_session(), get_config())
+    do
+      products
+    else 
+      error ->
+        Logger.error("Error retrieving products from Shopify: #{inspect(error)}")
+        []
+    end
+  end
+
   def get_page_count() do 
     with {:ok, count} <- Shopify.Product.count |> Shopify.request(get_session(), get_config())
     do      
@@ -43,8 +56,8 @@ defmodule ShopifyClient do
   # Does nothing if product data is nil
   def update_product(nil), do: nil
   def update_product(data) do 
-    IO.puts "Updating product: "
-    IO.inspect data["product_data"]
+    #IO.puts "Updating product: "
+    #IO.inspect data["product_data"]
 
     with {:ok, resp} <- Shopify.Product.update(data["id"], data["product_data"]) |> Shopify.request(get_session(), get_config())
     do
@@ -87,6 +100,32 @@ defmodule ShopifyClient do
     else 
       error ->
         Logger.error("Error updating inventory item to Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
+  def get_and_delete_metafields(product_id, namespace) do 
+    with {:ok, resp} <- Shopify.Metafield.list(product_id, %{}) |> Shopify.request(get_session(), get_config())
+    do
+      for metafield <- resp.body["metafields"] do 
+        if metafield["namespace"] == namespace do 
+          delete_metafield(product_id, metafield["id"])
+        end  
+      end 
+    else 
+      error ->
+        Logger.error("Error getting metafields from Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
+  def delete_metafield(product_id, metafield_id) do 
+    with {:ok, resp} <- Shopify.Metafield.delete(product_id, metafield_id) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error deleting metafield from Shopify: #{inspect(error)}")
         []
     end
   end 
