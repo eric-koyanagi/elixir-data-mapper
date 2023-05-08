@@ -55,7 +55,6 @@ defmodule ShopifyClientGraphQL do
 		    ownerType: PRODUCT
 		    description: "Tot Test Criteria Field"
 		    visibleToStorefrontApi: true
-		    pin: true
 		  }) {
 		    userErrors {
 		      field
