@@ -165,6 +165,22 @@ defmodule ShopifyClient do
     end
   end 
 
+  def create_order(nil), do: nil
+  def create_order(params) do 
+
+    IO.puts "Creating an Order ! "
+    IO.inspect params
+
+    with {:ok, resp} <- Shopify.Order.create(%{ :order => params }) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error creating order on Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
 
   def get_session do
     config = Application.get_all_env(:elixir_data_mapper)

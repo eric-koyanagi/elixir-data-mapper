@@ -1,4 +1,4 @@
-defmodule DM do
+defmodule DataMapper do
 
   @moduledoc """
   Entry point for data mapper; high level controller for pushing custom data to Shopify
@@ -10,7 +10,7 @@ defmodule DM do
 
   ## Examples
 
-      iex> DM.sync_all()
+      iex> DataMapper.sync_all()
 
   """
   def sync_all do
@@ -37,7 +37,7 @@ defmodule DM do
 
   ## Examples
 
-      iex> DM.sync_blogs(blog_id)
+      iex> DataMapper.sync_blogs(blog_id)
   """
   def sync_blogs(blog_id) do 
     BlogData.load |> BlogData.create_all(blog_id)
@@ -48,7 +48,7 @@ defmodule DM do
   for my use case, but is left here as an example 
 
   ## Examples
-      iex> DM.delete_metafields(product_id, "woocommerce")
+      iex> DataMapper.delete_metafields(product_id, "woocommerce")
   """
   def delete_metafields(product_id, namespace \\ "global") do 
     ShopifyClient.get_and_delete_metafields(product_id, namespace)
@@ -58,7 +58,7 @@ defmodule DM do
   Create criteria metafields, these have to be created in advance beacuse shopify's bool field is dumb at present; must be programatic to be practical
 
   ## Examples
-      iex> DM.create_criteria_metafields()
+      iex> DataMapper.create_criteria_metafields()
   """
   def create_criteria_metafields do 
     CriteriaData.load |> CriteriaData.create_all
@@ -69,7 +69,7 @@ defmodule DM do
 
   ## Examples
 
-      iex> DM.sync_all()
+      iex> DataMapper.sync_all()
   """
   def sync_page(pageInfo, productData, collectionMap, dropshipData, cin7Data) do
 
