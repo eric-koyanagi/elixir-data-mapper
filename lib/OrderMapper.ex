@@ -18,8 +18,6 @@ defmodule OrderMapper do
     #productData = ProductData.load()
     orderData = OrderData.load()
 
-    #IO.inspect orderData
-
     # A mapping of every SKU in Shopify to a shopify variant ID
     # Do this by iterating all pages of product data
     # --> This will either be used in-memory or output to CSV
@@ -30,6 +28,12 @@ defmodule OrderMapper do
     create_orders(orderData, mapping)
 
   end
+
+  def sync_redirects do 
+    # A mapping of every SKU in Shopify to a shopify variant ID
+    mapping = sync_page(nil, nil)
+    create_redirects(mapping)
+  end 
 
   def create_orders(orders, mapping) do 
     # iterates all orders and lines within those orders
@@ -45,7 +49,15 @@ defmodule OrderMapper do
         |> ShopifyClient.create_order
 
     end 
+  end 
 
+  def create_redirects(mapping) do 
+    productData = ProductData.load()
+    for {sku, line} <- mapping do 
+      product = get_from_mapping(sku, productData)
+      IO.puts "Creating redirect from #{product["handle"]} to #{line[:handle]}!"
+      ShopifyClient.create_redirect("/product/#{product["handle"]}", "/products/#{line[:handle]}")
+    end 
   end 
 
   def get_from_mapping(sku, mapping) do 

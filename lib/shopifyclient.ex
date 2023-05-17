@@ -181,6 +181,25 @@ defmodule ShopifyClient do
     end
   end 
 
+  def create_redirect("", _a), do: nil
+  def create_redirect(_a, ""), do: nil
+  def create_redirect("", ""), do: nil
+  def create_redirect(nil, nil), do: nil
+  def create_redirect(from, to) do 
+
+    IO.puts "Creating a redirect from #{from} to #{to}"
+
+    with {:ok, resp} <- Shopify.Redirect.create(%{ :redirect => %{:path => from, :target => to} }) 
+      |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error creating order on Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
 
   def get_session do
     config = Application.get_all_env(:elixir_data_mapper)
