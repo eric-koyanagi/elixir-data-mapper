@@ -19,7 +19,7 @@ defmodule DataMapper do
 
     # Return a map of Shopify collections, keyed by name, so I can use collection IDs to add to products
     # This is not used due to biz logic, but remains as an example because it is a common use case
-    collectionMap = ProductData.mapCollections()  
+    collectionMap = ProductData.mapCollections()
 
     # Return a map of dropship data
     dropshipData = DropshipData.load()
@@ -50,18 +50,37 @@ defmodule DataMapper do
   ## Examples
       iex> DataMapper.delete_metafields(product_id, "woocommerce")
   """
-  def delete_metafields(product_id, namespace \\ "global") do 
+  def delete_metafields(product_id, namespace \\ "woocommerce") do 
     ShopifyClient.get_and_delete_metafields(product_id, namespace)
   end 
 
   @doc """
-  Create criteria metafields, these have to be created in advance beacuse shopify's bool field is dumb at present; must be programatic to be practical
+  Create metafield definitions, these have to be created in advance beacuse shopify's bool field is dumb at present; must be programatic to be practical
 
   ## Examples
-      iex> DataMapper.create_criteria_metafields()
+      iex> DataMapper.create_metafields()
   """
-  def create_criteria_metafields do 
-    CriteriaData.load |> CriteriaData.create_all
+  def create_metafields do 
+
+    #creates criteria metafield definitions
+    #CriteriaData.load |> CriteriaData.create_all
+
+    ShopifyClientGraphQL.create_metafield(
+        "gender_filter",
+        "Gender Filter",
+        "filters",
+        "list.single_line_text_field",
+        "Gender Filter"
+    )
+
+    ShopifyClientGraphQL.create_metafield(
+        "age_filter",
+        "Age Filter",
+        "filters",
+        "list.single_line_text_field",
+        "Age Filter"
+    )
+
   end 
 
   @doc """

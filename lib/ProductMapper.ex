@@ -50,15 +50,15 @@ defmodule ProductMapper do
             },
             %{ 
               :key => "gender_filter", 
-              :type => "single_line_text_field", 
-              :value => customData["gender"] |> blankOrNullToNil,
-              :namespace => "global"
+              :type => "list.single_line_text_field", 
+              :value => customData["gender"] |> blankOrNullToNil |> splitIntoArray,
+              :namespace => "filters"
             },
             %{ 
               :key => "age_filter", 
-              :type => "single_line_text_field", 
-              :value => customData["age"] |> blankOrNullToNil,
-              :namespace => "global"
+              :type => "list.single_line_text_field", 
+              :value => customData["age"] |> blankOrNullToNil |> splitIntoArray,
+              :namespace => "filters"
             }
           ] ++ get_criteria_list(customData["criteria"])
         }
@@ -132,6 +132,14 @@ defmodule ProductMapper do
       }
     end 
   end 
+
+  @doc """
+    Converts a comma separated field to an array of strings
+  """
+  def splitIntoArray(nil), do: nil
+  def splitIntoArray(string) do
+    string |> String.split(",") |> Poison.encode!
+  end
 
   @doc """
     Given a style code as a "map", find the matching cin7 barcode

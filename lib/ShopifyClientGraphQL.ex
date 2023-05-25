@@ -36,7 +36,7 @@ defmodule ShopifyClientGraphQL do
 
 
 	def create_criteria_metafield(key, name, namespace \\ "woocommerce") do 
-		create_prodcut_metafield_definition(key, name, namespace) 
+		create_product_metafield_definition(key, name, namespace) 
 			|> Shopify.GraphQL.send(
 				access_token: Application.get_env(:elixir_data_mapper, :access_token), 
 				shop: Application.get_env(:elixir_data_mapper, :shop_name),
@@ -44,7 +44,18 @@ defmodule ShopifyClientGraphQL do
 			)
 	end 
 
-	def create_prodcut_metafield_definition(key, name, namespace) do 
+	# TODO this would clearly work better as an options map instead of 5 params
+	# I did not realize elixir lacks default support for named params :(
+	def create_metafield(key, name, namespace, type, description) do
+		create_product_metafield_definition(key, name, type, description, namespace) 
+			|> Shopify.GraphQL.send(
+				access_token: Application.get_env(:elixir_data_mapper, :access_token), 
+				shop: Application.get_env(:elixir_data_mapper, :shop_name),
+				limiter: true
+			)
+	end 
+
+	def create_product_metafield_definition(key, name, namespace) do 
 		"""
 		mutation {
 		  metafieldDefinitionCreate(definition: {
@@ -54,6 +65,27 @@ defmodule ShopifyClientGraphQL do
 		    name: "#{name}"
 		    ownerType: PRODUCT
 		    description: "Tot Test Criteria Field"
+		    visibleToStorefrontApi: true
+		  }) {
+		    userErrors {
+		      field
+		      message
+		    }
+		  }
+		}
+		"""
+	end 
+
+	def create_product_metafield_definition(key, name, type, description, namespace) do 
+		"""
+		mutation {
+		  metafieldDefinitionCreate(definition: {
+		    namespace: "#{namespace}"
+		    key: "#{key}"
+		    type: "#{type}"
+		    name: "#{name}"
+		    ownerType: PRODUCT
+		    description: "#{description}"
 		    visibleToStorefrontApi: true
 		  }) {
 		    userErrors {
