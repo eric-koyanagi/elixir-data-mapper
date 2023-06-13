@@ -150,7 +150,8 @@ defmodule OrderMapper do
           sync_page(orderData)
       end
     rescue 
-      MatchError -> %{}      
+      MatchError -> %{}
+      KeyError -> %{}  
     end 
   end 
 

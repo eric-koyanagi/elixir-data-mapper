@@ -63,7 +63,7 @@ defmodule DataMapper do
   def create_metafields do 
 
     #creates criteria metafield definitions
-    #CriteriaData.load |> CriteriaData.create_all
+    CriteriaData.load |> CriteriaData.create_all
 
     ShopifyClientGraphQL.create_metafield(
         "gender_filter",
@@ -92,11 +92,14 @@ defmodule DataMapper do
   """
   def sync_page(pageInfo, productData, collectionMap, dropshipData, cin7Data) do
 
+    IO.puts "DOING SYNC_PAGE ---> "
+    IO.inspect pageInfo
+
     # Get the next (or first) page of products
     product_response =  ShopifyClient.get_products(pageInfo) 
 
     # To test a specific product(s), get products by comma separated IDs     
-    #product_response = ShopifyClient.get_test_products("8218294452517")
+    #product_response = ShopifyClient.get_test_products("8128522486061")
 
     for product <- product_response.body["products"] do 
       

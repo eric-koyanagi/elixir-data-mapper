@@ -4,7 +4,9 @@ defmodule ShopifyClient do
   @maxPerPage 250
 
   def get_products(pageInfo) do
-    params = %{ limit: @maxPerPage, page_info: pageInfo }
+
+    params = get_list_params(pageInfo)
+    IO.inspect params
 
     with {:ok, products} <- Shopify.Product.list(params) |> Shopify.request(get_session(), get_config())
     do
@@ -15,6 +17,18 @@ defmodule ShopifyClient do
         []
     end
   end
+
+  # This can be used to start product pulls from a speicifc ID, in case an import is interupted
+  # This is a lazy hack and needs to be commented out or refactored to make it a real feature
+  def get_list_params(nil) do 
+
+    #%{ limit: @maxPerPage, since_id: 8129821245741}
+    %{ limit: @maxPerPage }
+  end 
+
+  def get_list_params(pageInfo) do 
+    %{ limit: @maxPerPage, page_info: pageInfo }
+  end 
 
   def get_test_products(ids) do
     params = %{ limit: @maxPerPage, ids: ids }
@@ -141,6 +155,33 @@ defmodule ShopifyClient do
     end
   end 
 
+  def get_price_rules(pageInfo) do
+
+    params = get_list_params(pageInfo)
+    IO.inspect params
+
+    with {:ok, price_rules} <- Shopify.PriceRule.list(params) |> Shopify.request(get_session(), get_config())
+    do
+      price_rules
+    else 
+      error ->
+        Logger.error("Error retrieving price rules from Shopify: #{inspect(error)}")
+        []
+    end
+  end
+
+  def delete_price_rule(nil), do: nil 
+  def delete_price_rule(id) do 
+    with {:ok, price_rules} <- Shopify.PriceRule.delete(id) |> Shopify.request(get_session(), get_config())
+    do
+      price_rules
+    else 
+      error ->
+        Logger.error("Error deleting price rules from Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
   def add_to_collection(a, nil), do: IO.puts "Product #{a} has no matching collection."
   def add_to_collection(product_id, collection_id) do 
     IO.puts "Adding product #{product_id} to collection #{collection_id}"
@@ -164,6 +205,73 @@ defmodule ShopifyClient do
         []
     end
   end 
+
+  def create_gift_card(code, expires, 0), do: nil
+  def create_gift_card(code, expires, amount) do
+    params = %{
+      "code" => code,
+      "expires_on" => expires,
+      "initial_value" => amount
+    }
+
+    IO.puts "Creating gift card: #{code}"
+
+    with {:ok, resp} <- Shopify.GiftCard.create(%{ :gift_card => params }) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error creating gift card on Shopify: #{inspect(error)}")
+        []
+    end
+    
+  end 
+
+  def create_price_rule(nil, code, expires, amount, once_per_customer), do: nil
+  def create_price_rule(type, code, expires, 0, once_per_customer), do: nil
+  def create_price_rule(type, code, expires, amount, once_per_customer) do 
+    IO.puts "Creating a price rule !"
+    params = %{
+      "title" => code,
+      "target_type" => "line_item",
+      "target_selection" => "all",
+      "allocation_method" => "across",            
+      "value_type" => type,
+      "value" => "-"<>amount,
+      "customer_selection" => "all",
+      "starts_at" => "2023-06-12T01:00:00",
+      "ends_at" => expires,
+      "usage_limit" => get_usage_limit(once_per_customer),
+      "once_per_customer" => once_per_customer
+    }
+
+    IO.inspect params
+
+    with {:ok, resp} <- Shopify.PriceRule.create(%{ :price_rule => params }) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error creating price rule on Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
+  def create_discount(price_rule_id, code) do 
+    with {:ok, resp} <- Shopify.PriceRule.create_discount(price_rule_id, code) |> Shopify.request(get_session(), get_config())
+    do
+      resp
+    else 
+      error ->
+        Logger.error("Error creating discount from price rule on Shopify: #{inspect(error)}")
+        []
+    end
+  end 
+
+  # if once_per_customer is set, don't set a usage limit; otherwise it's 1 time use coupon
+  def get_usage_limit(false), do: 1
+  def get_usage_limit(true), do: nil
+  
 
   def create_order(nil), do: nil
   def create_order(params) do 

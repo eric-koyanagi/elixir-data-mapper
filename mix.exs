@@ -29,7 +29,8 @@ defmodule DM.MixProject do
       {:csv, "~> 3.0"},
       {:shopify_graphql, "~> 2.1.0"},
       {:html_entities, "~> 0.5.2"},
-      {:poison, "~> 5.0"}
+      {:poison, "~> 5.0"},
+      {:timex, "~> 3.7"}
     ]
   end
 end
