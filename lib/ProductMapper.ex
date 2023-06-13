@@ -31,10 +31,10 @@ defmodule ProductMapper do
       "id" => productData["id"],
       "product_data" => %{
         "product" => %{
-          "title" => productData["title"] |> String.replace("&Amp;", "&"),
+          #"title" => productData["title"] |> String.replace("&Amp;", "&"),
           "vendor" => HtmlEntities.decode(customData["brand"]),
           "tags" => HtmlEntities.decode(tags),
-          "published_at" => nil,#publishedAt,
+          #"published_at" => nil,#publishedAt,
           "metafields" => [
             %{ 
               :key => "dropshipper", 
